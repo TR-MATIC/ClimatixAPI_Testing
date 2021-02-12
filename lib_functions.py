@@ -44,3 +44,17 @@ def get_token(config: dict) -> dict:
         else:
             output = {"error": "status_code_" + str(token_post.status_code)}
     return output
+
+
+def store_token(token: dict, file_name="api_token.txt"):
+    token_file = open(file_name, mode="w")
+    if "access_token" in token.keys():
+        token_file.writelines(token["access_token"])
+        output = "Token storing OK."
+    else:
+        output = "Token storing failed."
+    token_file.close()
+    return output
+
+
+def
