@@ -4,6 +4,11 @@ import requests
 
 # defs
 def load_config(file_name="api_config.txt") -> dict:
+    """
+    This function provides loading API access data from the TXT file.
+    :param file_name:
+    :return:
+    """
     config_file = open(file_name, mode="r")
     config_data = config_file.readlines()
     config_file.close()
@@ -17,6 +22,11 @@ def load_config(file_name="api_config.txt") -> dict:
 
 
 def get_token(config: dict) -> dict:
+    """
+    This function reads the token from the Climatix API.
+    :param config:
+    :return:
+    """
     url = config["api_url"]
     headers = {"Ocp-Apim-Subscription-Key": config["api_key"]}
     data = {
@@ -36,6 +46,7 @@ def get_token(config: dict) -> dict:
         output = {"error": "other"}
     else:
         if token_post.status_code == 200:
+            print(token_post.json())
             received = token_post.json()
             if "access_token" in received.keys():
                 output = {"access_token": received["access_token"]}
@@ -47,6 +58,12 @@ def get_token(config: dict) -> dict:
 
 
 def store_token(token: dict, file_name="api_token.txt"):
+    """
+    This function stores the token (its a text string) in the TXT file.
+    :param token:
+    :param file_name:
+    :return:
+    """
     token_file = open(file_name, mode="w")
     if "access_token" in token.keys():
         token_file.writelines(token["access_token"])
@@ -57,4 +74,37 @@ def store_token(token: dict, file_name="api_token.txt"):
     return output
 
 
-def
+def load_token(file_name="api_token.txt"):
+    """
+    This function reads the token, which was previously stored in TXT file. This is executed this way,
+    because the token expires after some time and shouldn't be polled from the API every time. By default
+    the token remains valid for 48 hours.
+    :param file_name:
+    :return:
+    """
+    token_file = open(file_name, mode="r")
+    token = token_file.readline()
+    token_file.close()
+    return token
+
+
+def list_tenants(config: dict, token: str, url="https://api.climatixic.com/Tenants/"):
+    """
+    This function lists all tenants within the reach of the user being logged-in.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    skip = 0
+    take = 1
+    params = {
+        "skip": skip,
+        "take": take
+    }
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    tenants_get = requests.get(url, params=params, headers=headers)
+    return tenants_get.json()
