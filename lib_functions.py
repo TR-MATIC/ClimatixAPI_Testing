@@ -1,5 +1,6 @@
 # libs
 import requests
+import datetime
 
 
 # defs
@@ -32,7 +33,8 @@ def get_token(config: dict) -> dict:
     data = {
         "grant_type": config["grant_type"],
         "username": config["username"],
-        "password": config["password"]
+        "password": config["password"],
+        "expire_minutes": "2880"
     }
     try:
         token_post = requests.post(url, headers=headers, data=data)
@@ -46,7 +48,6 @@ def get_token(config: dict) -> dict:
         output = {"error": "other"}
     else:
         if token_post.status_code == 200:
-            print(token_post.json())
             received = token_post.json()
             if "access_token" in received.keys():
                 output = {"access_token": received["access_token"]}
@@ -54,6 +55,7 @@ def get_token(config: dict) -> dict:
                 output = {"error": "corrupted_data"}
         else:
             output = {"error": "status_code_" + str(token_post.status_code)}
+    print(output)
     return output
 
 
@@ -71,6 +73,7 @@ def store_token(token: dict, file_name="api_token.txt"):
     else:
         output = "Token storing failed."
     token_file.close()
+    print(output)
     return output
 
 
@@ -97,7 +100,7 @@ def list_tenants(config: dict, token: str, url="https://api.climatixic.com/Tenan
     :return:
     """
     skip = 0
-    take = 1
+    take = 3
     params = {
         "skip": skip,
         "take": take
@@ -108,3 +111,123 @@ def list_tenants(config: dict, token: str, url="https://api.climatixic.com/Tenan
     }
     tenants_get = requests.get(url, params=params, headers=headers)
     return tenants_get.json()
+
+
+def list_plants(config: dict, token: str, url="https://api.climatixic.com/Plants/"):
+    """
+    This function lists all plants within the reach of the user being logged-in.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    skip = 0
+    take = 100
+    params = {
+        "skip": skip,
+        "take": take
+    }
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    plants_get = requests.get(url, params=params, headers=headers)
+    return plants_get.json()
+
+
+def list_view_nodes(config: dict, token: str, url="https://api.climatixic.com/ViewNodes/"):
+    """
+    This function lists all view nodes within the reach of the user being logged-in.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    skip = 0
+    take = 100
+    params = {
+        "skip": skip,
+        "take": take
+    }
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    plants_get = requests.get(url, params=params, headers=headers)
+    return plants_get.json()
+
+
+def list_vn_items(config: dict, token: str, vn_id:str, url="https://api.climatixic.com/ViewNodes/"):
+    """
+    This function lists all view nodes within the reach of the user being logged-in.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    plants_get = requests.get(url + vn_id, headers=headers)
+    return plants_get.json()
+
+
+def list_data_points(config: dict, token: str, url="https://api.climatixic.com/DataPoints/"):
+    """
+    This function lists all data points within the accessed plant.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    skip = 0
+    take = 10
+    params = {
+        "parentId": [{"Plants": "P97acd4b5-4847-4b39-b946-0b940f69aeeb"}],
+        "skip": skip,
+        "take": take
+    }
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    data_points_get = requests.get(url, params=params, headers=headers)
+    print(data_points_get)
+    return data_points_get.json()
+
+
+def fetch_data_point(config: dict, token: str, dp_id: str, url="https://api.climatixic.com/DataPoints/"):
+    """
+    This function lists specific data point within the accessed plant.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    data_points_get = requests.get(url + dp_id, headers=headers)
+    return data_points_get.json()
+
+
+def fetch_dp_analytics(config: dict, token: str, start: int, end: int, dp_id: str, url="https://api.climatixic.com/Analytics/DataPoints/"):
+    """
+    This function lists specific data point within the accessed plant.
+    :param config:
+    :param token:
+    :param url:
+    :return:
+    """
+    params = {
+        "start": start,
+        "end": end
+    }
+    headers = {
+        "Ocp-Apim-Subscription-Key": config["api_key"],
+        "Authorization": "Bearer " + token
+    }
+    data_points_get = requests.get(url + dp_id, params=params, headers=headers)
+    return data_points_get.json()
